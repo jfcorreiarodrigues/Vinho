@@ -1,5 +1,28 @@
 # Supabase — schema e migrações
 
+## Projecto activo
+
+| | |
+|---|---|
+| Ref | `bqgibwlzrsexwckncvsv` |
+| Região | `eu-west-3` (Paris, a mais próxima de Portugal) |
+| Postgres | 17.6 |
+| URL | `https://bqgibwlzrsexwckncvsv.supabase.co` |
+
+As credenciais estão no `.env` (não commitado). A anon key é pública por
+desenho — quem protege os dados é o RLS, e é por isso que os testes abaixo
+importam.
+
+### Verificar contra o projecto real
+
+```bash
+npx tsx scripts/verificar-supabase.ts
+```
+
+Cria dois utilizadores com sessões verdadeiras e exercita registo, login,
+isolamento de caves, privacidade de emails, escalada de privilégios e limite
+do plano gratuito.
+
 ## Aplicar as migrações
 
 **Opção A — Supabase CLI (recomendado)**
@@ -21,6 +44,8 @@ do nome** → Run.
 | `20260726000100_initial_schema.sql` | Tipos, tabelas, índices, triggers |
 | `20260726000200_rls_policies.sql` | Row Level Security |
 | `20260726000300_storage.sql` | Bucket `wine-labels` e políticas |
+| `20260726000400_limite_por_garrafas.sql` | Limite do plano free por garrafas |
+| `20260726000500_advisor_fixes.sql` | Correcções do Supabase Advisor |
 
 ## Secrets das Edge Functions
 
@@ -112,4 +137,14 @@ SELECT tablename, rowsecurity AS rls_enabled
 FROM pg_tables WHERE schemaname = 'public';
 ```
 
-No painel: **Advisors → Security**. Deve ficar sem avisos.
+No painel: **Advisors → Security**. Está sem avisos — mas só depois das
+correcções em `20260726000500_advisor_fixes.sql`, que o Advisor apanhou e os
+testes locais não conseguiam apanhar:
+
+- a política de leitura no bucket público permitia **listar** todos os
+  ficheiros, e como as pastas são os `user_id`, isso enumerava os
+  utilizadores todos;
+- as funções de trigger, estando no schema `public`, ficavam expostas como
+  endpoints RPC.
+
+Correr o Advisor depois de qualquer alteração ao schema.
