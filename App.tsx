@@ -12,10 +12,11 @@ import {
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { scheduleMaturationAlerts, scheduleWeeklyDigest } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
 import { MainTabs } from '@/navigation';
 import { AuthScreen } from '@/screens/AuthScreen';
@@ -40,6 +41,7 @@ export default function App() {
   const [sessaoVerificada, setSessaoVerificada] = useState(false);
 
   const user = useStore((s) => s.user);
+  const wines = useStore((s) => s.wines);
   const carregarSessao = useStore((s) => s.carregarSessao);
   const setUser = useStore((s) => s.setUser);
 
@@ -66,6 +68,15 @@ export default function App() {
 
     return () => data.subscription.unsubscribe();
   }, [carregarSessao, setUser]);
+
+  // Reagendar sempre que a cave muda: as janelas de maturação dependem do
+  // inventário, e `scheduleMaturationAlerts` cancela o pendente antes de
+  // agendar, portanto não acumula.
+  useEffect(() => {
+    if (Platform.OS === 'web' || !user) return;
+    void scheduleMaturationAlerts(wines);
+    void scheduleWeeklyDigest(wines);
+  }, [user, wines]);
 
   const terminarOnboarding = useCallback(() => {
     setOnboardingVisto(true);

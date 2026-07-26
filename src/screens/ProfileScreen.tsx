@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { euros, percentagem } from '@/lib/formato';
+import { cancelarTodos, scheduleMaturationAlerts } from '@/lib/notifications';
 import { useStore } from '@/store';
 import { Colors, Radius, Spacing, Typography } from '@/theme';
 
@@ -14,14 +15,22 @@ export function ProfileScreen({ onAbrirPortfolio }: Props) {
   const user = useStore((s) => s.user);
   const terminarSessao = useStore((s) => s.terminarSessao);
   const getCellarStats = useStore((s) => s.getCellarStats);
+  const wines = useStore((s) => s.wines);
   const stats = getCellarStats();
 
-  // Preferências locais até o passo 14 as ligar a `user_settings`.
+  // `naturais` e `digest` continuam locais até serem sincronizados com
+  // `user_settings`; `alertasPico` já mexe nas notificações agendadas.
   const [naturais, setNaturais] = useState(true);
   const [alertasPico, setAlertasPico] = useState(true);
   const [digest, setDigest] = useState(false);
 
   const premium = user?.plan === 'premium';
+
+  function alternarAlertas(activo: boolean) {
+    setAlertasPico(activo);
+    if (Platform.OS === 'web') return;
+    void (activo ? scheduleMaturationAlerts(wines) : cancelarTodos());
+  }
 
   function confirmarSaida() {
     Alert.alert('Terminar sessão?', 'Vais precisar de entrar outra vez.', [
@@ -91,7 +100,7 @@ export function ProfileScreen({ onAbrirPortfolio }: Props) {
           emoji="⭐"
           texto="Alertas de pico de maturação"
           valor={alertasPico}
-          onChange={setAlertasPico}
+          onChange={alternarAlertas}
         />
         <Toggle
           emoji="📧"
@@ -100,8 +109,9 @@ export function ProfileScreen({ onAbrirPortfolio }: Props) {
           onChange={setDigest}
         />
         <Text style={estilos.nota}>
-          As preferências ficam neste dispositivo até à sincronização com o
-          perfil (passo 14).
+          Os alertas de pico já reagendam as notificações. As restantes
+          preferências ficam neste dispositivo até serem sincronizadas com o
+          perfil.
         </Text>
 
         <Text style={estilos.seccao}>Conta</Text>

@@ -94,13 +94,13 @@ Seguindo a ordem da secção 16 da especificação:
 - [x] **3. Supabase** — migrações SQL, RLS, `src/lib/supabase.ts`, testes
 - [x] **4. Store** — `src/store/` (Zustand + lógica pura testada)
 - [x] **5. Auth flow** — Onboarding, Auth, navegação por separadores
-- [ ] 6. Scan core
+- [ ] 6. Scan core — **bloqueado: falta a chave do Gemini**
 - [x] **7. Cave** — `CaveScreen`, `WineDetailScreen`, entrada manual
-- [ ] 8. Sommelier
+- [ ] 8. Sommelier — **bloqueado: falta a chave do Gemini**
 - [x] **9. Futebol** — `FootballScreen`, maridagens, wine bars de Lisboa
 - [x] **10. Social** — `SocialScreen` (feed, descobrir, desafios)
-- [ ] 11. Bulk entry
+- [ ] 11. Bulk entry — **bloqueado: falta a chave do Gemini**
 - [x] **12. Investment** — `InvestmentScreen`, `investimento.ts`, `winePrices.ts`
 - [~] **13. Profile** — `ProfileScreen` feito; Stripe pendente de chaves
 - [x] **14. Notificações** — `alertas.ts` (puro, testado) + `notifications.ts`
-- [ ] 15. Polimento
+- [~] 15. Polimento — feito ao longo do caminho; falta rever em dispositivo
