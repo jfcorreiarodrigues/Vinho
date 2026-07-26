@@ -5,6 +5,8 @@ import { Modal, StyleSheet, Text } from 'react-native';
 import { CaveScreen } from '@/screens/CaveScreen';
 import { EmConstrucao } from '@/screens/EmConstrucao';
 import { EntradaManualScreen } from '@/screens/EntradaManualScreen';
+import { FootballScreen } from '@/screens/FootballScreen';
+import { SocialScreen } from '@/screens/SocialScreen';
 import { WineDetailScreen } from '@/screens/WineDetailScreen';
 import { Colors, Typography } from '@/theme';
 import type { Wine } from '@/types';
@@ -51,22 +53,6 @@ const placeholders = {
       passo="Passo 8 — Chat contextual"
     />
   ),
-  Futebol: () => (
-    <EmConstrucao
-      titulo="Futebol & Vinho"
-      subtitulo="Ligas portuguesas"
-      emoji="⚽"
-      passo="Passo 9 — football-data.org"
-    />
-  ),
-  Social: () => (
-    <EmConstrucao
-      titulo="VinhaFeed"
-      subtitulo="Rede de amantes de vinho"
-      emoji="👥"
-      passo="Passo 10 — Feed social"
-    />
-  ),
   Perfil: () => (
     <EmConstrucao
       titulo="Perfil"
@@ -76,9 +62,15 @@ const placeholders = {
     />
   ),
 } as const satisfies Record<
-  Exclude<keyof MainTabParamList, 'Cave'>,
+  Exclude<keyof MainTabParamList, 'Cave' | 'Futebol' | 'Social'>,
   React.ComponentType
 >;
+
+/** Separadores já implementados, que não passam pelos placeholders. */
+const ECRAS: Partial<Record<keyof MainTabParamList, React.ComponentType>> = {
+  Futebol: FootballScreen,
+  Social: SocialScreen,
+};
 
 const icones: Record<keyof MainTabParamList, string> = {
   Scan: '📷',
@@ -136,7 +128,7 @@ export function MainTabs() {
           <Tabs.Screen
             key={nome}
             name={nome}
-            component={placeholders[nome]}
+            component={ECRAS[nome] ?? placeholders[nome as keyof typeof placeholders]}
             options={{
               tabBarIcon: ({ focused }) => (
                 <Icone simbolo={icones[nome]} focado={focused} />

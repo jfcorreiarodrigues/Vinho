@@ -31,7 +31,7 @@ npm start
 
 ```bash
 npm run typecheck                    # tsc em modo strict
-npm test                             # lógica pura e formatação (33 testes)
+npm test                             # lógica pura, formatação e futebol (43 testes)
 ./supabase/tests/run.sh              # migrações + RLS contra Postgres local (12 testes)
 npx expo export --platform android   # confirma que a app faz bundle
 ```
@@ -97,8 +97,8 @@ Seguindo a ordem da secção 16 da especificação:
 - [ ] 6. Scan core
 - [x] **7. Cave** — `CaveScreen`, `WineDetailScreen`, entrada manual
 - [ ] 8. Sommelier
-- [ ] 9. Futebol
-- [ ] 10. Social
+- [x] **9. Futebol** — `FootballScreen`, maridagens, wine bars de Lisboa
+- [x] **10. Social** — `SocialScreen` (feed, descobrir, desafios)
 - [ ] 11. Bulk entry
 - [ ] 12. Investment
 - [ ] 13. Profile + Stripe

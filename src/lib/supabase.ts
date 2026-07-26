@@ -4,7 +4,7 @@ import { AppState } from 'react-native';
 import 'react-native-url-polyfill/auto';
 
 import type { Database, WineRow } from '@/types/database';
-import type { Result, User, Wine, WineInput } from '@/types';
+import type { Result, User, Wine, WineInput, WinePost } from '@/types';
 
 /* ------------------------------------------------------------------ *
  * Cliente
@@ -352,4 +352,118 @@ export async function invokeEdgeFunction<
   if (data === null) return { ok: false, error: 'Resposta vazia do servidor.' };
 
   return { ok: true, data };
+}
+
+/* ------------------------------------------------------------------ *
+ * Social
+ * ------------------------------------------------------------------ */
+
+/**
+ * Feed com autor e estado de like do próprio utilizador.
+ *
+ * O join com `profiles` só funciona porque os perfis públicos são legíveis
+ * por qualquer autenticado — era exactamente isto que a política `FOR ALL`
+ * da especificação original impedia.
+ */
+export async function fetchFeed(): Promise<Result<WinePost[]>> {
+  const { data: auth } = await supabase.auth.getUser();
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select(
+      'id, wine_name, producer, region, vintage, rating, note, occasion, mood, is_pureza, likes, created_at, user_id, profiles(id, name, avatar_url, location)',
+    )
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) return falha(error);
+
+  const meusLikes = new Set<string>();
+  if (auth.user) {
+    const { data: likes } = await supabase
+      .from('post_likes')
+      .select('post_id')
+      .eq('user_id', auth.user.id);
+    likes?.forEach((l) => meusLikes.add(l.post_id));
+  }
+
+  type LinhaComAutor = (typeof data)[number] & {
+    profiles: { id: string; name: string; avatar_url: string | null; location: string } | null;
+  };
+
+  const posts: WinePost[] = (data as LinhaComAutor[]).map((p) => ({
+    id: p.id,
+    user: {
+      id: p.profiles?.id ?? p.user_id,
+      name: p.profiles?.name ?? 'Enófilo',
+      avatar: p.profiles?.avatar_url ?? undefined,
+      location: p.profiles?.location ?? 'Portugal',
+    },
+    wine_name: p.wine_name,
+    producer: p.producer ?? undefined,
+    region: p.region ?? undefined,
+    vintage: p.vintage ?? undefined,
+    rating: p.rating,
+    note: p.note ?? '',
+    occasion: p.occasion ?? undefined,
+    mood: p.mood ?? undefined,
+    is_pureza: p.is_pureza,
+    likes: p.likes,
+    liked: meusLikes.has(p.id),
+    comments: 0,
+    timestamp: p.created_at,
+  }));
+
+  return { ok: true, data: posts };
+}
+
+/** O contador em `posts.likes` é mantido por trigger — não se escreve aqui. */
+export async function alternarLike(
+  postId: string,
+  jaGostava: boolean,
+): Promise<Result<null>> {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return { ok: false, error: 'Sessão expirada. Entra outra vez.' };
+
+  const { error } = jaGostava
+    ? await supabase
+        .from('post_likes')
+        .delete()
+        .eq('post_id', postId)
+        .eq('user_id', auth.user.id)
+    : await supabase
+        .from('post_likes')
+        .insert({ post_id: postId, user_id: auth.user.id });
+
+  return error ? falha(error) : { ok: true, data: null };
+}
+
+export async function publicarPost(post: {
+  wine_name: string;
+  producer?: string;
+  region?: string;
+  vintage?: number;
+  rating: number;
+  note?: string;
+  is_pureza?: boolean;
+}): Promise<Result<null>> {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return { ok: false, error: 'Sessão expirada. Entra outra vez.' };
+
+  const { error } = await supabase.from('posts').insert({
+    user_id: auth.user.id,
+    wine_id: null,
+    wine_name: post.wine_name,
+    producer: post.producer ?? null,
+    region: post.region ?? null,
+    vintage: post.vintage ?? null,
+    rating: post.rating,
+    note: post.note ?? null,
+    occasion: null,
+    mood: null,
+    is_pureza: post.is_pureza ?? false,
+    image_url: null,
+  });
+
+  return error ? falha(error) : { ok: true, data: null };
 }
