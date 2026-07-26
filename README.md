@@ -31,7 +31,7 @@ npm start
 
 ```bash
 npm run typecheck                    # tsc em modo strict
-npm test                             # lógica pura, formatação, futebol e portfólio (58 testes)
+npm test                             # lógica pura da app (68 testes)
 ./supabase/tests/run.sh              # migrações + RLS contra Postgres local (12 testes)
 npx expo export --platform android   # confirma que a app faz bundle
 ```
@@ -102,5 +102,5 @@ Seguindo a ordem da secção 16 da especificação:
 - [ ] 11. Bulk entry
 - [x] **12. Investment** — `InvestmentScreen`, `investimento.ts`, `winePrices.ts`
 - [~] **13. Profile** — `ProfileScreen` feito; Stripe pendente de chaves
-- [ ] 14. Notificações
+- [x] **14. Notificações** — `alertas.ts` (puro, testado) + `notifications.ts`
 - [ ] 15. Polimento
