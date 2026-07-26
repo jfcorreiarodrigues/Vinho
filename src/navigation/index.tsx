@@ -6,6 +6,8 @@ import { CaveScreen } from '@/screens/CaveScreen';
 import { EmConstrucao } from '@/screens/EmConstrucao';
 import { EntradaManualScreen } from '@/screens/EntradaManualScreen';
 import { FootballScreen } from '@/screens/FootballScreen';
+import { InvestmentScreen } from '@/screens/InvestmentScreen';
+import { ProfileScreen } from '@/screens/ProfileScreen';
 import { SocialScreen } from '@/screens/SocialScreen';
 import { WineDetailScreen } from '@/screens/WineDetailScreen';
 import { Colors, Typography } from '@/theme';
@@ -53,16 +55,8 @@ const placeholders = {
       passo="Passo 8 — Chat contextual"
     />
   ),
-  Perfil: () => (
-    <EmConstrucao
-      titulo="Perfil"
-      subtitulo="Conta e preferências"
-      emoji="👤"
-      passo="Passo 13 — Perfil + Stripe"
-    />
-  ),
 } as const satisfies Record<
-  Exclude<keyof MainTabParamList, 'Cave' | 'Futebol' | 'Social'>,
+  Exclude<keyof MainTabParamList, 'Cave' | 'Futebol' | 'Social' | 'Perfil'>,
   React.ComponentType
 >;
 
@@ -96,6 +90,7 @@ export function MainTabs() {
   // stack navigator próprio nem entradas no histórico.
   const [vinhoAberto, setVinhoAberto] = useState<Wine | null>(null);
   const [aAdicionar, setAAdicionar] = useState(false);
+  const [portfolioAberto, setPortfolioAberto] = useState(false);
 
   return (
     <>
@@ -124,6 +119,14 @@ export function MainTabs() {
               />
             )}
           </Tabs.Screen>
+        ) : nome === 'Perfil' ? (
+          <Tabs.Screen
+            key={nome}
+            name="Perfil"
+            options={{ tabBarIcon: ({ focused }) => <Icone simbolo={icones.Perfil} focado={focused} /> }}
+          >
+            {() => <ProfileScreen onAbrirPortfolio={() => setPortfolioAberto(true)} />}
+          </Tabs.Screen>
         ) : (
           <Tabs.Screen
             key={nome}
@@ -148,6 +151,15 @@ export function MainTabs() {
       {vinhoAberto ? (
         <WineDetailScreen wine={vinhoAberto} onFechar={() => setVinhoAberto(null)} />
       ) : null}
+    </Modal>
+
+    <Modal
+      visible={portfolioAberto}
+      animationType="slide"
+      onRequestClose={() => setPortfolioAberto(false)}
+      presentationStyle="pageSheet"
+    >
+      <InvestmentScreen onFechar={() => setPortfolioAberto(false)} />
     </Modal>
 
     <Modal
