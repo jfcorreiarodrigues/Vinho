@@ -1,13 +1,15 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRef, useState } from 'react';
 import {
-  FlatList,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
-  type ViewToken,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -68,16 +70,23 @@ export function OnboardingScreen({ onTerminar }: Props) {
   // paging ficava desalinhado em ecrãs dobráveis ou multi-janela.
   const { width: LARGURA } = useWindowDimensions();
   const [indice, setIndice] = useState(0);
-  const listaRef = useRef<FlatList<Slide>>(null);
+  // Medimos a altura da própria ScrollView em vez de depender de flexbox: o
+  // contentor de conteúdo do react-native-web fica em `column`, o que torna a
+  // altura o eixo principal e colapsa cada slide para a altura do texto.
+  // Medir e aplicar a altura é determinístico e não depende de internals.
+  const [alturaSlide, setAlturaSlide] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+
+  function aoMedir(e: LayoutChangeEvent) {
+    setAlturaSlide(e.nativeEvent.layout.height);
+  }
 
   const ultimo = indice === SLIDES.length - 1;
 
-  const verItens = useRef((info: { viewableItems: ViewToken[] }) => {
-    const primeiro = info.viewableItems[0];
-    if (primeiro?.index != null) setIndice(primeiro.index);
-  }).current;
-
-  const criterioVisibilidade = useRef({ itemVisiblePercentThreshold: 60 }).current;
+  function aoParar(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    const pagina = Math.round(e.nativeEvent.contentOffset.x / LARGURA);
+    setIndice(Math.min(Math.max(pagina, 0), SLIDES.length - 1));
+  }
 
   function avancar() {
     if (ultimo) {
@@ -85,7 +94,7 @@ export function OnboardingScreen({ onTerminar }: Props) {
       return;
     }
     const proximo = indice + 1;
-    listaRef.current?.scrollToIndex({ index: proximo, animated: true });
+    scrollRef.current?.scrollTo({ x: LARGURA * proximo, animated: true });
     setIndice(proximo);
   }
 
@@ -106,28 +115,31 @@ export function OnboardingScreen({ onTerminar }: Props) {
           </Pressable>
         </View>
 
-        <FlatList
-          ref={listaRef}
-          data={SLIDES}
-          keyExtractor={(s) => s.id}
+        <ScrollView
+          ref={scrollRef}
+          style={estilos.lista}
+          contentContainerStyle={estilos.listaConteudo}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          onViewableItemsChanged={verItens}
-          viewabilityConfig={criterioVisibilidade}
-          getItemLayout={(_, i) => ({
-            length: LARGURA,
-            offset: LARGURA * i,
-            index: i,
-          })}
-          renderItem={({ item }) => (
-            <View style={[estilos.slide, { width: LARGURA }]}>
-              <Text style={estilos.emoji}>{item.emoji}</Text>
-              <Text style={estilos.titulo}>{item.titulo}</Text>
-              <Text style={estilos.descricao}>{item.descricao}</Text>
+          onMomentumScrollEnd={aoParar}
+          onLayout={aoMedir}
+        >
+          {SLIDES.map((slide) => (
+            <View
+              key={slide.id}
+              style={[
+                estilos.slide,
+                { width: LARGURA },
+                alturaSlide > 0 ? { height: alturaSlide } : null,
+              ]}
+            >
+              <Text style={estilos.emoji}>{slide.emoji}</Text>
+              <Text style={estilos.titulo}>{slide.titulo}</Text>
+              <Text style={estilos.descricao}>{slide.descricao}</Text>
             </View>
-          )}
-        />
+          ))}
+        </ScrollView>
 
         <View style={estilos.rodape}>
           <View
@@ -167,6 +179,10 @@ const estilos = StyleSheet.create({
     fontSize: Typography.sizes.base,
     color: 'rgba(245,239,224,0.6)',
   },
+  // Sem `flex: 1` a lista dimensiona-se pela altura do conteúdo e os slides
+  // ficam colados ao topo, com o `justifyContent` sem espaço onde operar.
+  lista: { flex: 1 },
+  listaConteudo: { flexDirection: 'row' },
   slide: {
     alignItems: 'center',
     justifyContent: 'center',
