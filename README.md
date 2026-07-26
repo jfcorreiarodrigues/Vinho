@@ -40,6 +40,20 @@ Ver `.env.example` para a lista completa. O `.env` **nunca** é commitado.
 | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` / `STRIPE_SECRET_KEY` | Stripe | Premium |
 | `EXPO_PUBLIC_FOOTBALL_API_KEY` | football-data.org | Opcional |
 
+## Base de dados
+
+O schema vive em `supabase/migrations/`. Ver `supabase/README.md` para o
+detalhe das divergências face à secção 5 da spec (todas por motivos de
+segurança) e para as instruções de aplicação.
+
+```bash
+# Correr as migrações e os testes de RLS contra um Postgres local efémero
+./supabase/tests/run.sh
+```
+
+Os testes cobrem o item do checklist da secção 17 ("utilizador A não vê a cave
+do utilizador B") e mais dez invariantes de segurança.
+
 ## Desvios conscientes à especificação
 
 | Spec | Implementado | Porquê |
@@ -56,7 +70,7 @@ Seguindo a ordem da secção 16 da especificação:
 
 - [x] **1. Setup base** — `package.json`, `app.json`, `tsconfig.json`, `babel.config.js`, `eas.json`, `.env.example`, `.gitignore`
 - [x] **2. Theme + Types** — `src/theme/index.ts`, `src/types/index.ts`
-- [ ] 3. Supabase
+- [x] **3. Supabase** — migrações SQL, RLS, `src/lib/supabase.ts`, testes
 
 - [ ] 4. Store
 - [ ] 5. Auth flow
