@@ -11,9 +11,13 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-for (const linha of readFileSync(new URL('../.env', import.meta.url), 'utf8').split('\n')) {
+const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+for (const linha of readFileSync(join(raiz, '.env'), 'utf8').split('\n')) {
   const m = linha.match(/^([A-Z_]+)=(.*)$/);
   if (m?.[1] && m[2]) process.env[m[1]] = m[2].trim();
 }

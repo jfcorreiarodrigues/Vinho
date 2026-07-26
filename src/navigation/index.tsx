@@ -1,8 +1,13 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet, Text } from 'react-native';
+import { useState } from 'react';
+import { Modal, StyleSheet, Text } from 'react-native';
 
+import { CaveScreen } from '@/screens/CaveScreen';
 import { EmConstrucao } from '@/screens/EmConstrucao';
+import { EntradaManualScreen } from '@/screens/EntradaManualScreen';
+import { WineDetailScreen } from '@/screens/WineDetailScreen';
 import { Colors, Typography } from '@/theme';
+import type { Wine } from '@/types';
 
 export type MainTabParamList = {
   Scan: undefined;
@@ -38,14 +43,6 @@ const placeholders = {
       passo="Passo 6 — Scan + Gemini Vision"
     />
   ),
-  Cave: () => (
-    <EmConstrucao
-      titulo="A Minha Cave"
-      subtitulo="Inventário"
-      emoji="🏛️"
-      passo="Passo 7 — Cave + Detalhe do vinho"
-    />
-  ),
   Sommelier: () => (
     <EmConstrucao
       titulo="Sommelier"
@@ -78,7 +75,10 @@ const placeholders = {
       passo="Passo 13 — Perfil + Stripe"
     />
   ),
-} as const satisfies Record<keyof MainTabParamList, React.ComponentType>;
+} as const satisfies Record<
+  Exclude<keyof MainTabParamList, 'Cave'>,
+  React.ComponentType
+>;
 
 const icones: Record<keyof MainTabParamList, string> = {
   Scan: '📷',
@@ -99,7 +99,14 @@ const ORDEM = [
 ] as const satisfies readonly (keyof MainTabParamList)[];
 
 export function MainTabs() {
+  // O detalhe e a entrada manual são modais sobre os separadores, geridos
+  // aqui em estado local: são dois ecrãs efémeros que não justificam um
+  // stack navigator próprio nem entradas no histórico.
+  const [vinhoAberto, setVinhoAberto] = useState<Wine | null>(null);
+  const [aAdicionar, setAAdicionar] = useState(false);
+
   return (
+    <>
     <Tabs.Navigator
       screenOptions={{
         headerShown: false,
@@ -109,19 +116,57 @@ export function MainTabs() {
         tabBarLabelStyle: estilos.etiqueta,
       }}
     >
-      {ORDEM.map((nome) => (
-        <Tabs.Screen
-          key={nome}
-          name={nome}
-          component={placeholders[nome]}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <Icone simbolo={icones[nome]} focado={focused} />
-            ),
-          }}
-        />
-      ))}
+      {ORDEM.map((nome) =>
+        nome === 'Cave' ? (
+          <Tabs.Screen
+            key={nome}
+            name="Cave"
+            options={{
+              tabBarIcon: ({ focused }) => <Icone simbolo={icones.Cave} focado={focused} />,
+            }}
+          >
+            {() => (
+              <CaveScreen
+                onAbrirVinho={setVinhoAberto}
+                onAdicionar={() => setAAdicionar(true)}
+              />
+            )}
+          </Tabs.Screen>
+        ) : (
+          <Tabs.Screen
+            key={nome}
+            name={nome}
+            component={placeholders[nome]}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <Icone simbolo={icones[nome]} focado={focused} />
+              ),
+            }}
+          />
+        ),
+      )}
     </Tabs.Navigator>
+
+    <Modal
+      visible={vinhoAberto !== null}
+      animationType="slide"
+      onRequestClose={() => setVinhoAberto(null)}
+      presentationStyle="pageSheet"
+    >
+      {vinhoAberto ? (
+        <WineDetailScreen wine={vinhoAberto} onFechar={() => setVinhoAberto(null)} />
+      ) : null}
+    </Modal>
+
+    <Modal
+      visible={aAdicionar}
+      animationType="slide"
+      onRequestClose={() => setAAdicionar(false)}
+      presentationStyle="pageSheet"
+    >
+      <EntradaManualScreen onFechar={() => setAAdicionar(false)} />
+    </Modal>
+    </>
   );
 }
 
