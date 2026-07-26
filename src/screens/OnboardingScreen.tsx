@@ -1,11 +1,11 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRef, useState } from 'react';
 import {
-  Dimensions,
   FlatList,
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   type ViewToken,
 } from 'react-native';
@@ -13,8 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Botao } from '@/components/Botao';
 import { Colors, Spacing, Typography } from '@/theme';
-
-const { width: LARGURA } = Dimensions.get('window');
 
 interface Slide {
   id: string;
@@ -66,6 +64,9 @@ interface Props {
 }
 
 export function OnboardingScreen({ onTerminar }: Props) {
+  // Reactivo em vez de lido uma vez no import: com o valor capturado, o
+  // paging ficava desalinhado em ecrãs dobráveis ou multi-janela.
+  const { width: LARGURA } = useWindowDimensions();
   const [indice, setIndice] = useState(0);
   const listaRef = useRef<FlatList<Slide>>(null);
 
@@ -120,7 +121,7 @@ export function OnboardingScreen({ onTerminar }: Props) {
             index: i,
           })}
           renderItem={({ item }) => (
-            <View style={estilos.slide}>
+            <View style={[estilos.slide, { width: LARGURA }]}>
               <Text style={estilos.emoji}>{item.emoji}</Text>
               <Text style={estilos.titulo}>{item.titulo}</Text>
               <Text style={estilos.descricao}>{item.descricao}</Text>
@@ -167,7 +168,6 @@ const estilos = StyleSheet.create({
     color: 'rgba(245,239,224,0.6)',
   },
   slide: {
-    width: LARGURA,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing['4xl'],

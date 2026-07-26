@@ -152,3 +152,35 @@ export function filtrarVinhos(
 function arredondar(n: number): number {
   return Math.round(n * 100) / 100;
 }
+
+/**
+ * Memoiza por identidade dos argumentos, guardando uma entrada por chave.
+ *
+ * Existe por causa do Zustand: um selector que devolva objecto ou array novo
+ * a cada chamada faz o `useSyncExternalStore` ver sempre um valor diferente e
+ * entrar em ciclo de render. `calcularStats` e `filtrarVinhos` constroem
+ * valores novos, por isso o store tem de os passar por aqui.
+ */
+export function memoizarPorReferencia<Deps extends readonly unknown[], R>(
+  calcular: (...deps: Deps) => R,
+  chave: (...deps: Deps) => string = () => 'única',
+): (...deps: Deps) => R {
+  const cache = new Map<string, { deps: Deps; resultado: R }>();
+
+  return (...deps: Deps): R => {
+    const k = chave(...deps);
+    const guardado = cache.get(k);
+
+    if (
+      guardado &&
+      guardado.deps.length === deps.length &&
+      guardado.deps.every((d, i) => Object.is(d, deps[i]))
+    ) {
+      return guardado.resultado;
+    }
+
+    const resultado = calcular(...deps);
+    cache.set(k, { deps, resultado });
+    return resultado;
+  };
+}

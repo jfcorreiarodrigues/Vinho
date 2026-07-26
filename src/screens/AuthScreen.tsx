@@ -24,6 +24,7 @@ export function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
   const aRegistar = modo === 'registar';
@@ -49,12 +50,30 @@ export function AuthScreen() {
     }
 
     setErro(null);
+    setAviso(null);
     setOcupado(true);
 
-    const r = aRegistar
-      ? await signUp(nome.trim(), email.trim(), password)
-      : await signIn(email.trim(), password);
+    if (aRegistar) {
+      const r = await signUp(nome.trim(), email.trim(), password);
+      setOcupado(false);
 
+      if (!r.ok) {
+        setErro(r.error);
+        return;
+      }
+      // Com confirmação por email activa não há sessão, e portanto nada muda
+      // no ecrã. Sem esta mensagem o registo parece ter falhado em silêncio.
+      if (r.data.precisaConfirmarEmail) {
+        setAviso(
+          `Enviámos um email para ${email.trim()}. Confirma o endereço e depois entra.`,
+        );
+        setModo('entrar');
+        setPassword('');
+      }
+      return;
+    }
+
+    const r = await signIn(email.trim(), password);
     setOcupado(false);
 
     // Em caso de sucesso não navegamos aqui: o onAuthStateChange no App.tsx
@@ -65,6 +84,7 @@ export function AuthScreen() {
   function trocarModo() {
     setModo(aRegistar ? 'entrar' : 'registar');
     setErro(null);
+    setAviso(null);
   }
 
   return (
@@ -117,12 +137,19 @@ export function AuthScreen() {
               onChange={setPassword}
               placeholder="Pelo menos 6 caracteres"
               tipo="password"
+              novaPassword={aRegistar}
               onSubmit={submeter}
             />
 
             {erro ? (
               <View style={estilos.avisoErro} accessibilityLiveRegion="polite">
                 <Text style={estilos.avisoErroTexto}>{erro}</Text>
+              </View>
+            ) : null}
+
+            {aviso ? (
+              <View style={estilos.avisoOk} accessibilityLiveRegion="polite">
+                <Text style={estilos.avisoOkTexto}>{aviso}</Text>
               </View>
             ) : null}
 
@@ -198,6 +225,17 @@ const estilos = StyleSheet.create({
     fontFamily: Typography.fonts.sans,
     fontSize: Typography.sizes.base,
     color: Colors.status.dangerText,
+  },
+  avisoOk: {
+    backgroundColor: Colors.status.successBg,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+  avisoOkTexto: {
+    fontFamily: Typography.fonts.sans,
+    fontSize: Typography.sizes.base,
+    color: Colors.status.successText,
   },
   alternar: { marginTop: Spacing.xl, alignItems: 'center' },
   alternarTexto: {

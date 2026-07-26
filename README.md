@@ -31,8 +31,8 @@ npm start
 
 ```bash
 npm run typecheck                    # tsc em modo strict
-npm test                             # lógica pura da cave (20 testes)
-./supabase/tests/run.sh              # migrações + RLS contra Postgres local
+npm test                             # lógica pura da cave (24 testes)
+./supabase/tests/run.sh              # migrações + RLS contra Postgres local (12 testes)
 npx expo export --platform android   # confirma que a app faz bundle
 ```
 
@@ -63,6 +63,17 @@ segurança) e para as instruções de aplicação.
 Os testes cobrem o item do checklist da secção 17 ("utilizador A não vê a cave
 do utilizador B") e mais dez invariantes de segurança.
 
+## Assets
+
+Os ícones e o splash são gerados a partir da paleta do design system:
+
+```bash
+python3 scripts/gerar-assets.py
+```
+
+São assets de trabalho, suficientes para `eas build`. Substituir por arte
+definitiva antes de submeter às lojas.
+
 ## Desvios conscientes à especificação
 
 | Spec | Implementado | Porquê |
@@ -72,6 +83,7 @@ do utilizador B") e mais dez invariantes de segurança.
 | Zustand 4.5 | **5.x** | O v4 tem problemas conhecidos com React 19. |
 | Chaves em `EXPO_PUBLIC_*` | **Supabase Edge Functions** (a partir do passo 3) | `EXPO_PUBLIC_*` é embutido no bundle e é trivialmente extraível. Gemini, Wine-Searcher e Stripe passam a ser chamados server-side. |
 | `wines` sem coluna de cor | **`wine_type` adicionado** | Os filtros da CaveScreen (Tintos/Brancos/Rosés/Espumantes) não eram implementáveis sem ela. |
+| Limite free ambíguo | **50 garrafas** (`SUM(quantity)`) | A secção 13 diz "garrafas". Contar linhas deixava passar 1 vinho × 60 garrafas e bloqueava 51 vinhos × 1. |
 
 ## Estado da implementação
 

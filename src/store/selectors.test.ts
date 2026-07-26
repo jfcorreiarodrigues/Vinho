@@ -9,13 +9,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import type { Wine } from '@/types';
+import type { Wine, WineFilter } from '@/types';
 import {
   calcularStats,
   ehPureza,
   estaNoPico,
   filtrarVinhos,
   jaPassouDoPico,
+  memoizarPorReferencia,
   roiAnualizado,
   saiDoPicoEsteAno,
   valorDeMercado,
@@ -198,4 +199,49 @@ test('filtro de investimento apanha raridade e valorização', () => {
   ];
   const r = filtrarVinhos(cave, 'investimento').map((w) => w.id);
   assert.deepEqual(r.sort(), ['raro', 'valorizou']);
+});
+
+/* ------------------------- memoização -------------------------- */
+
+test('memo devolve a mesma referência enquanto as deps não mudam', () => {
+  const memo = memoizarPorReferencia((ws: Wine[]) => calcularStats(ws));
+  const cave = [vinho()];
+  assert.equal(memo(cave), memo(cave), 'devia reutilizar o resultado');
+});
+
+test('memo recalcula quando a referência das deps muda', () => {
+  const memo = memoizarPorReferencia((ws: Wine[]) => calcularStats(ws));
+  assert.notEqual(memo([vinho()]), memo([vinho()]));
+});
+
+test('memo separa entradas por chave, sem se atropelarem', () => {
+  const memo = memoizarPorReferencia(
+    (ws: Wine[], f: 'tintos' | 'brancos') => filtrarVinhos(ws, f),
+    (_ws, f) => f,
+  );
+  const cave = [vinho({ wine_type: 'tinto' }), vinho({ wine_type: 'branco' })];
+
+  const tintos = memo(cave, 'tintos');
+  const brancos = memo(cave, 'brancos');
+
+  // Alternar entre filtros não pode invalidar o resultado do outro.
+  assert.equal(memo(cave, 'tintos'), tintos);
+  assert.equal(memo(cave, 'brancos'), brancos);
+  assert.equal(tintos.length, 1);
+  assert.equal(brancos.length, 1);
+});
+
+test('filtrarVinhos memoizado é estável para todos os filtros', () => {
+  const memo = memoizarPorReferencia(
+    (ws: Wine[], f: WineFilter) => filtrarVinhos(ws, f),
+    (_ws, f) => f,
+  );
+  const cave = [vinho({ wine_type: 'tinto', pureza_score: 90 })];
+  const filtros: WineFilter[] = [
+    'todos', 'tintos', 'brancos', 'roses', 'espumantes',
+    'naturais', 'beber_agora', 'investimento',
+  ];
+  for (const f of filtros) {
+    assert.equal(memo(cave, f), memo(cave, f), `filtro ${f} instável`);
+  }
 });

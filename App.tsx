@@ -57,8 +57,11 @@ export default function App() {
         setUser(null);
         return;
       }
-      // SIGNED_IN, TOKEN_REFRESHED e USER_UPDATED podem trazer perfil novo.
-      void carregarSessao();
+      // TOKEN_REFRESHED dispara de hora a hora e não muda nem o perfil nem a
+      // cave; recarregar aí custava um fetch completo do inventário à toa.
+      if (evento === 'SIGNED_IN' || evento === 'USER_UPDATED') {
+        void carregarSessao();
+      }
     });
 
     return () => data.subscription.unsubscribe();

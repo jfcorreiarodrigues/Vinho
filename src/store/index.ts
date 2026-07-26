@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 
 import * as db from '@/lib/supabase';
-import { calcularStats, estaNoPico, filtrarVinhos } from '@/store/selectors';
+import {
+  calcularStats,
+  estaNoPico,
+  filtrarVinhos,
+  memoizarPorReferencia,
+} from '@/store/selectors';
 import type {
   CellarStats,
   Message,
@@ -51,6 +56,30 @@ interface AppStore {
 
   limparErro: () => void;
 }
+
+// Memos ao nível do módulo: o store é um singleton, e sem isto qualquer
+// componente que faça `useStore(s => s.getCellarStats())` recebe um objecto
+// novo a cada notificação e entra em ciclo de render.
+const statsMemo = memoizarPorReferencia(
+  (wines: Wine[], marketData: Record<string, WineMarketData>) => {
+    // Sobrepor a cotação em cache antes de calcular, para os stats
+    // reflectirem o mercado e não só o preço de compra.
+    const comMercado = wines.map((w) => {
+      const cotacao = marketData[w.id];
+      return cotacao ? { ...w, current_market_value: cotacao.average_price } : w;
+    });
+    return calcularStats(comMercado);
+  },
+);
+
+const filtroMemo = memoizarPorReferencia(
+  (wines: Wine[], filtro: WineFilter) => filtrarVinhos(wines, filtro),
+  (_wines, filtro) => filtro,
+);
+
+const picoMemo = memoizarPorReferencia((wines: Wine[]) =>
+  wines.filter((w) => estaNoPico(w)),
+);
 
 export const useStore = create<AppStore>((set, get) => ({
   user: null,
@@ -134,13 +163,20 @@ export const useStore = create<AppStore>((set, get) => ({
   },
 
   deleteWine: async (id) => {
-    const anteriores = get().wines;
+    const removido = get().wines.find((w) => w.id === id);
     // Optimista: a lista responde de imediato e reverte se o servidor recusar.
-    set({ wines: anteriores.filter((w) => w.id !== id), error: null });
+    set((s) => ({ wines: s.wines.filter((w) => w.id !== id), error: null }));
 
     const r = await db.deleteWine(id);
     if (!r.ok) {
-      set({ wines: anteriores, error: r.error });
+      // Repor só este vinho sobre o estado actual, para não desfazer
+      // alterações que tenham acontecido entretanto.
+      set((s) => ({
+        wines: removido && !s.wines.some((w) => w.id === id)
+          ? [removido, ...s.wines]
+          : s.wines,
+        error: r.error,
+      }));
       return false;
     }
     return true;
@@ -184,18 +220,12 @@ export const useStore = create<AppStore>((set, get) => ({
 
   getCellarStats: () => {
     const { wines, marketData } = get();
-    // Sobrepor a cotação em cache antes de calcular, para os stats
-    // reflectirem o mercado e não só o preço de compra.
-    const comMercado = wines.map((w) => {
-      const cotacao = marketData[w.id];
-      return cotacao ? { ...w, current_market_value: cotacao.average_price } : w;
-    });
-    return calcularStats(comMercado);
+    return statsMemo(wines, marketData);
   },
 
-  getFilteredWines: (filter) => filtrarVinhos(get().wines, filter),
+  getFilteredWines: (filter) => filtroMemo(get().wines, filter),
 
-  getWinesAtPeak: () => get().wines.filter((w) => estaNoPico(w)),
+  getWinesAtPeak: () => picoMemo(get().wines),
 
   limparErro: () => set({ error: null }),
 }));

@@ -55,7 +55,7 @@ export function traduzErro(error: PostgrestError | Error | null): string {
   const msg = error.message ?? '';
 
   if (msg.includes('LIMITE_PLANO_FREE')) {
-    return 'O plano gratuito permite até 50 vinhos na cave. Faz upgrade para Premium para adicionares mais.';
+    return 'O plano gratuito permite até 50 garrafas na cave. Faz upgrade para Premium para adicionares mais.';
   }
   if (msg.includes('Invalid login credentials')) {
     return 'Email ou palavra-passe incorrectos.';
@@ -90,17 +90,27 @@ function falha<T>(error: PostgrestError | Error | null): Result<T> {
  * Autenticação
  * ------------------------------------------------------------------ */
 
+export interface ResultadoRegisto {
+  /**
+   * Verdadeiro quando o projecto exige confirmação por email: o registo teve
+   * sucesso mas não há sessão, por isso nada muda no ecrã. Sem este sinal a
+   * app parece encravada depois de carregar em "Criar conta".
+   */
+  precisaConfirmarEmail: boolean;
+}
+
 export async function signUp(
   name: string,
   email: string,
   password: string,
-): Promise<Result<null>> {
-  const { error } = await supabase.auth.signUp({
+): Promise<Result<ResultadoRegisto>> {
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { name } },
   });
-  return error ? falha(error) : { ok: true, data: null };
+  if (error) return falha(error);
+  return { ok: true, data: { precisaConfirmarEmail: data.session === null } };
 }
 
 export async function signIn(

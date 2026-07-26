@@ -24,6 +24,80 @@ function Icone({ simbolo, focado }: { simbolo: string; focado: boolean }) {
   );
 }
 
+/**
+ * Placeholders declarados ao nível do módulo. Como componentes inline no
+ * `<Tabs.Screen>` seriam uma identidade nova a cada render do navigator, o
+ * que desmonta e remonta o ecrã em vez de o actualizar.
+ */
+const placeholders = {
+  Scan: () => (
+    <EmConstrucao
+      titulo="VinhaVibe"
+      subtitulo="Cave Privada · Lisboa"
+      emoji="📷"
+      passo="Passo 6 — Scan + Gemini Vision"
+    />
+  ),
+  Cave: () => (
+    <EmConstrucao
+      titulo="A Minha Cave"
+      subtitulo="Inventário"
+      emoji="🏛️"
+      passo="Passo 7 — Cave + Detalhe do vinho"
+    />
+  ),
+  Sommelier: () => (
+    <EmConstrucao
+      titulo="Sommelier"
+      subtitulo="de Alvalade"
+      emoji="🧑‍🍳"
+      passo="Passo 8 — Chat contextual"
+    />
+  ),
+  Futebol: () => (
+    <EmConstrucao
+      titulo="Futebol & Vinho"
+      subtitulo="Ligas portuguesas"
+      emoji="⚽"
+      passo="Passo 9 — football-data.org"
+    />
+  ),
+  Social: () => (
+    <EmConstrucao
+      titulo="VinhaFeed"
+      subtitulo="Rede de amantes de vinho"
+      emoji="👥"
+      passo="Passo 10 — Feed social"
+    />
+  ),
+  Perfil: () => (
+    <EmConstrucao
+      titulo="Perfil"
+      subtitulo="Conta e preferências"
+      emoji="👤"
+      passo="Passo 13 — Perfil + Stripe"
+    />
+  ),
+} as const satisfies Record<keyof MainTabParamList, React.ComponentType>;
+
+const icones: Record<keyof MainTabParamList, string> = {
+  Scan: '📷',
+  Cave: '🏛️',
+  Sommelier: '🧑‍🍳',
+  Futebol: '⚽',
+  Social: '👥',
+  Perfil: '👤',
+};
+
+const ORDEM = [
+  'Scan',
+  'Cave',
+  'Sommelier',
+  'Futebol',
+  'Social',
+  'Perfil',
+] as const satisfies readonly (keyof MainTabParamList)[];
+
 export function MainTabs() {
   return (
     <Tabs.Navigator
@@ -35,101 +109,18 @@ export function MainTabs() {
         tabBarLabelStyle: estilos.etiqueta,
       }}
     >
-      <Tabs.Screen
-        name="Scan"
-        options={{
-          tabBarIcon: ({ focused }) => <Icone simbolo="📷" focado={focused} />,
-        }}
-      >
-        {() => (
-          <EmConstrucao
-            titulo="VinhaVibe"
-            subtitulo="Cave Privada · Lisboa"
-            emoji="📷"
-            passo="Passo 6 — Scan + Gemini Vision"
-          />
-        )}
-      </Tabs.Screen>
-
-      <Tabs.Screen
-        name="Cave"
-        options={{
-          tabBarIcon: ({ focused }) => <Icone simbolo="🏛️" focado={focused} />,
-        }}
-      >
-        {() => (
-          <EmConstrucao
-            titulo="A Minha Cave"
-            subtitulo="Inventário"
-            emoji="🏛️"
-            passo="Passo 7 — Cave + Detalhe do vinho"
-          />
-        )}
-      </Tabs.Screen>
-
-      <Tabs.Screen
-        name="Sommelier"
-        options={{
-          tabBarIcon: ({ focused }) => <Icone simbolo="🧑‍🍳" focado={focused} />,
-        }}
-      >
-        {() => (
-          <EmConstrucao
-            titulo="Sommelier"
-            subtitulo="de Alvalade"
-            emoji="🧑‍🍳"
-            passo="Passo 8 — Chat contextual"
-          />
-        )}
-      </Tabs.Screen>
-
-      <Tabs.Screen
-        name="Futebol"
-        options={{
-          tabBarIcon: ({ focused }) => <Icone simbolo="⚽" focado={focused} />,
-        }}
-      >
-        {() => (
-          <EmConstrucao
-            titulo="Futebol & Vinho"
-            subtitulo="Ligas portuguesas"
-            emoji="⚽"
-            passo="Passo 9 — football-data.org"
-          />
-        )}
-      </Tabs.Screen>
-
-      <Tabs.Screen
-        name="Social"
-        options={{
-          tabBarIcon: ({ focused }) => <Icone simbolo="👥" focado={focused} />,
-        }}
-      >
-        {() => (
-          <EmConstrucao
-            titulo="VinhaFeed"
-            subtitulo="Rede de amantes de vinho"
-            emoji="👥"
-            passo="Passo 10 — Feed social"
-          />
-        )}
-      </Tabs.Screen>
-
-      <Tabs.Screen
-        name="Perfil"
-        options={{
-          tabBarIcon: ({ focused }) => <Icone simbolo="👤" focado={focused} />,
-        }}
-      >
-        {() => (
-          <EmConstrucao
-            titulo="Perfil"
-            subtitulo="Conta e preferências"
-            emoji="👤"
-            passo="Passo 13 — Perfil + Stripe"
-          />
-        )}
-      </Tabs.Screen>
+      {ORDEM.map((nome) => (
+        <Tabs.Screen
+          key={nome}
+          name={nome}
+          component={placeholders[nome]}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <Icone simbolo={icones[nome]} focado={focused} />
+            ),
+          }}
+        />
+      ))}
     </Tabs.Navigator>
   );
 }

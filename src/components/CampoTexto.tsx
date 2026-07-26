@@ -9,13 +9,18 @@ interface Props {
   onChange: (v: string) => void;
   placeholder?: string;
   tipo?: 'texto' | 'email' | 'password';
+  /** Distingue palavra-passe nova de existente para os gestores de senhas. */
+  novaPassword?: boolean;
   erro?: string;
   onSubmit?: () => void;
   autoFocus?: boolean;
 }
 
 export const CampoTexto = forwardRef<TextInput, Props>(function CampoTexto(
-  { etiqueta, valor, onChange, placeholder, tipo = 'texto', erro, onSubmit, autoFocus },
+  {
+    etiqueta, valor, onChange, placeholder, tipo = 'texto',
+    erro, onSubmit, autoFocus, novaPassword = false,
+  },
   ref,
 ) {
   return (
@@ -32,7 +37,11 @@ export const CampoTexto = forwardRef<TextInput, Props>(function CampoTexto(
         keyboardType={tipo === 'email' ? 'email-address' : 'default'}
         autoCapitalize={tipo === 'texto' ? 'words' : 'none'}
         autoComplete={
-          tipo === 'email' ? 'email' : tipo === 'password' ? 'current-password' : 'name'
+          tipo === 'email'
+            ? 'email'
+            : tipo === 'password'
+              ? (novaPassword ? 'new-password' : 'current-password')
+              : 'name'
         }
         autoCorrect={false}
         returnKeyType={onSubmit ? 'go' : 'next'}

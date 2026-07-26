@@ -207,27 +207,55 @@ RESET role;
 -- ---------------------------------------------------------------- --
 
 DO $$
-DECLARE i INTEGER; bloqueou BOOLEAN := FALSE;
+DECLARE bloqueou BOOLEAN := FALSE;
 BEGIN
   PERFORM set_config('role', 'authenticated', true);
   PERFORM set_config('request.jwt.claim.sub', 'aaaaaaaa-0000-0000-0000-000000000001', true);
 
-  -- Já existe 1 vinho da Ana; inserir até aos 50.
-  FOR i IN 2..50 LOOP
-    INSERT INTO public.wines (user_id, name, producer, region)
-    VALUES ('aaaaaaaa-0000-0000-0000-000000000001', 'Vinho ' || i, 'Produtor', 'Douro');
-  END LOOP;
+  -- A Ana já tem 1 garrafa; subir para 50 tem de passar.
+  UPDATE public.wines SET quantity = 50
+  WHERE user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+
+  -- A 51.ª garrafa, num vinho novo, tem de ser recusada.
+  BEGIN
+    INSERT INTO public.wines (user_id, name, producer, region, quantity)
+    VALUES ('aaaaaaaa-0000-0000-0000-000000000001', 'Vinho extra', 'Produtor', 'Douro', 1);
+  EXCEPTION WHEN OTHERS THEN
+    ASSERT SQLERRM LIKE '%LIMITE_PLANO_FREE%', 'erro inesperado: ' || SQLERRM;
+    bloqueou := TRUE;
+  END;
+  ASSERT bloqueou, 'FALHA: plano free aceitou a 51.a garrafa';
+
+  RAISE NOTICE 'OK  limite de 50 garrafas do plano free é imposto na BD';
+END $$;
+RESET role;
+
+-- ---------------------------------------------------------------- --
+-- 8b. A fuga do UPDATE: subir a quantidade tem de ser bloqueada
+-- ---------------------------------------------------------------- --
+
+DO $$
+DECLARE bloqueou BOOLEAN := FALSE; qtd INTEGER;
+BEGIN
+  PERFORM set_config('role', 'authenticated', true);
+  PERFORM set_config('request.jwt.claim.sub', 'aaaaaaaa-0000-0000-0000-000000000001', true);
 
   BEGIN
-    INSERT INTO public.wines (user_id, name, producer, region)
-    VALUES ('aaaaaaaa-0000-0000-0000-000000000001', 'Vinho 51', 'Produtor', 'Douro');
+    UPDATE public.wines SET quantity = 500
+    WHERE user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
   EXCEPTION WHEN OTHERS THEN
     ASSERT SQLERRM LIKE '%LIMITE_PLANO_FREE%', 'erro inesperado: ' || SQLERRM;
     bloqueou := TRUE;
   END;
 
-  ASSERT bloqueou, 'FALHA: plano free aceitou o 51.º vinho';
-  RAISE NOTICE 'OK  limite de 50 vinhos do plano free é imposto na BD';
+  ASSERT bloqueou, 'FALHA CRÍTICA: UPDATE contorna o limite do plano free';
+
+  RESET role;
+  SELECT SUM(quantity) INTO qtd FROM public.wines
+  WHERE user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  ASSERT qtd = 50, format('quantidade devia continuar 50, é %s', qtd);
+
+  RAISE NOTICE 'OK  UPDATE não contorna o limite do plano free';
 END $$;
 RESET role;
 
