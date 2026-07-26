@@ -27,6 +27,15 @@ cp .env.example .env
 npm start
 ```
 
+## Verificação
+
+```bash
+npm run typecheck                    # tsc em modo strict
+npm test                             # lógica pura da cave (20 testes)
+./supabase/tests/run.sh              # migrações + RLS contra Postgres local
+npx expo export --platform android   # confirma que a app faz bundle
+```
+
 ## Variáveis de ambiente
 
 Ver `.env.example` para a lista completa. O `.env` **nunca** é commitado.
@@ -71,9 +80,8 @@ Seguindo a ordem da secção 16 da especificação:
 - [x] **1. Setup base** — `package.json`, `app.json`, `tsconfig.json`, `babel.config.js`, `eas.json`, `.env.example`, `.gitignore`
 - [x] **2. Theme + Types** — `src/theme/index.ts`, `src/types/index.ts`
 - [x] **3. Supabase** — migrações SQL, RLS, `src/lib/supabase.ts`, testes
-
-- [ ] 4. Store
-- [ ] 5. Auth flow
+- [x] **4. Store** — `src/store/` (Zustand + lógica pura testada)
+- [x] **5. Auth flow** — Onboarding, Auth, navegação por separadores
 - [ ] 6. Scan core
 - [ ] 7. Cave
 - [ ] 8. Sommelier
