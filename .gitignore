@@ -44,3 +44,8 @@ yarn-error.*
 
 # TypeScript
 *.tsbuildinfo
+
+# Fotos de etiquetas para o teste de precisão (podem ser pessoais)
+scripts/etiquetas/*
+!scripts/etiquetas/LEIA-ME.md
+!scripts/etiquetas/esperado.json

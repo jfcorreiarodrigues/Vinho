@@ -1,0 +1,10 @@
+{
+  "_comentario": "Substitui isto pelas tuas etiquetas. A chave é o nome do ficheiro; preenche só os campos que queres avaliar.",
+  "exemplo-redoma-2020.jpg": {
+    "producer": "Niepoort",
+    "name": "Redoma",
+    "region": "Douro",
+    "vintage": 2020,
+    "wine_type": "tinto"
+  }
+}
