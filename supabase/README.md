@@ -148,3 +148,15 @@ testes locais não conseguiam apanhar:
   endpoints RPC.
 
 Correr o Advisor depois de qualquer alteração ao schema.
+
+### Excepção consciente
+
+O Advisor assinala `preco_comunidade` como `SECURITY DEFINER` invocável por
+utilizadores autenticados. **É intencional**: ao contrário das funções de
+trigger, esta existe para ser invocada. Precisa de `SECURITY DEFINER` para
+ler para além do RLS de `wines`, e as salvaguardas de privacidade estão
+todas dentro da própria função — só devolve agregados, exige três ou mais
+utilizadores distintos e nunca devolve identificadores.
+
+Verificado com 8 testes, incluindo o caso de dois utilizadores (não revela
+nada) e o de três registos do mesmo utilizador (também não revela).

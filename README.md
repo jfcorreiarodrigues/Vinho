@@ -84,6 +84,8 @@ definitiva antes de submeter às lojas.
 | Chaves em `EXPO_PUBLIC_*` | **Supabase Edge Functions** (a partir do passo 3) | `EXPO_PUBLIC_*` é embutido no bundle e é trivialmente extraível. Gemini, Wine-Searcher e Stripe passam a ser chamados server-side. |
 | `wines` sem coluna de cor | **`wine_type` adicionado** | Os filtros da CaveScreen (Tintos/Brancos/Rosés/Espumantes) não eram implementáveis sem ela. |
 | Limite free ambíguo | **50 garrafas** (`SUM(quantity)`) | A secção 13 diz "garrafas". Contar linhas deixava passar 1 vinho × 60 garrafas e bloqueava 51 vinhos × 1. |
+| Preços via Wine-Searcher | **Referência da comunidade** | A API não tem acesso self-serve. A mediana dos preços registados pelos utilizadores é gratuita, real e melhora com escala. Ver `20260726000600_preco_comunidade.sql`. |
+| `main: expo/AppEntry.js` | **`index.js` + `registerRootComponent`** | O padrão legado servia 404 em `/index.bundle`: `expo export` funcionava, `npx expo start` não. |
 
 ## Estado da implementação
 

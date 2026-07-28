@@ -158,7 +158,26 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      /**
+       * Referência de preço agregada da comunidade. Devolve zero linhas
+       * quando há menos de três utilizadores distintos com o mesmo vinho —
+       * ver `20260726000600_preco_comunidade.sql`.
+       */
+      preco_comunidade: {
+        Args: {
+          p_producer: string;
+          p_name: string;
+          p_vintage?: number | null;
+        };
+        Returns: {
+          mediana: number;
+          minimo: number;
+          maximo: number;
+          amostras: number;
+        }[];
+      };
+    };
     Enums: {
       wine_type: WineTypeEnum;
       wine_source: WineSourceEnum;

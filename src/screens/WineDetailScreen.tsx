@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EMOJI_POR_TIPO } from '@/components/CartaoVinho';
 import { euros, percentagem, pontos } from '@/lib/formato';
+import { precoComunidade, type PrecoComunidade } from '@/lib/winePrices';
 import { useStore } from '@/store';
 import {
   anoActual,
@@ -23,6 +25,19 @@ interface Props {
 export function WineDetailScreen({ wine, onFechar }: Props) {
   const deleteWine = useStore((s) => s.deleteWine);
   const marketData = useStore((s) => s.marketData[wine.id]);
+  const [comunidade, setComunidade] = useState<PrecoComunidade | null>(null);
+
+  // Referência da comunidade. Silenciosa: sem dados suficientes não aparece
+  // secção nenhuma, em vez de mostrar um vazio a dizer que não há nada.
+  useEffect(() => {
+    let activo = true;
+    void precoComunidade(wine).then((p) => {
+      if (activo) setComunidade(p);
+    });
+    return () => {
+      activo = false;
+    };
+  }, [wine]);
 
   const investido = valorInvestido(wine);
   const mercado = marketData
@@ -118,6 +133,24 @@ export function WineDetailScreen({ wine, onFechar }: Props) {
             </Text>
           )}
         </View>
+
+        {comunidade ? (
+          <>
+            <Text style={estilos.seccao}>Referência da comunidade</Text>
+            <View style={estilos.comunidade}>
+              <View style={estilos.comunidadeLinha}>
+                <Text style={estilos.comunidadeMediana}>{euros(comunidade.mediana)}</Text>
+                <Text style={estilos.comunidadeIntervalo}>
+                  {euros(comunidade.minimo)} – {euros(comunidade.maximo)}
+                </Text>
+              </View>
+              <Text style={estilos.comunidadeNota}>
+                Mediana do que {comunidade.amostras} membros pagaram por este vinho.
+                Valores agregados — nenhum preço individual é visível.
+              </Text>
+            </View>
+          </>
+        ) : null}
 
         {wine.maturation_window_start != null || wine.maturation_window_end != null ? (
           <>
@@ -326,6 +359,29 @@ const estilos = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     color: Colors.cream.mid,
     marginTop: Spacing.lg,
+  },
+  comunidade: {
+    backgroundColor: Colors.pureza.bg,
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+  },
+  comunidadeLinha: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  comunidadeMediana: {
+    fontFamily: Typography.fonts.serifSemiBold,
+    fontSize: Typography.sizes['3xl'],
+    color: Colors.pureza.text,
+  },
+  comunidadeIntervalo: {
+    fontFamily: Typography.fonts.sans,
+    fontSize: Typography.sizes.base,
+    color: Colors.pureza.text,
+  },
+  comunidadeNota: {
+    fontFamily: Typography.fonts.sans,
+    fontSize: Typography.sizes.xs,
+    color: Colors.pureza.text,
+    marginTop: Spacing.md,
+    lineHeight: 16,
   },
   maturacao: { backgroundColor: Colors.cream.light, borderRadius: Radius.lg, padding: Spacing.xl },
   maturacaoAnos: { flexDirection: 'row', justifyContent: 'space-between' },
