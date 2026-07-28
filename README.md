@@ -31,7 +31,7 @@ npm start
 
 ```bash
 npm run typecheck                    # tsc em modo strict
-npm test                             # lógica pura da app (68 testes)
+npm test                             # lógica pura da app (78 testes)
 ./supabase/tests/run.sh              # migrações + RLS contra Postgres local (12 testes)
 npx expo export --platform android   # confirma que a app faz bundle
 ```
@@ -96,7 +96,7 @@ Seguindo a ordem da secção 16 da especificação:
 - [x] **3. Supabase** — migrações SQL, RLS, `src/lib/supabase.ts`, testes
 - [x] **4. Store** — `src/store/` (Zustand + lógica pura testada)
 - [x] **5. Auth flow** — Onboarding, Auth, navegação por separadores
-- [ ] 6. Scan core — **bloqueado: falta a chave do Gemini**
+- [x] **6. Scan core** — `ScanScreen`, `gemini.ts` (I/O), `scan.ts` (puro, testado)
 - [x] **7. Cave** — `CaveScreen`, `WineDetailScreen`, entrada manual
 - [ ] 8. Sommelier — **bloqueado: falta a chave do Gemini**
 - [x] **9. Futebol** — `FootballScreen`, maridagens, wine bars de Lisboa

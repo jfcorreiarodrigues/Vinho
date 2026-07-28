@@ -8,6 +8,7 @@ import { EntradaManualScreen } from '@/screens/EntradaManualScreen';
 import { FootballScreen } from '@/screens/FootballScreen';
 import { InvestmentScreen } from '@/screens/InvestmentScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
+import { ScanScreen } from '@/screens/ScanScreen';
 import { SocialScreen } from '@/screens/SocialScreen';
 import { WineDetailScreen } from '@/screens/WineDetailScreen';
 import { Colors, Typography } from '@/theme';
@@ -39,14 +40,6 @@ function Icone({ simbolo, focado }: { simbolo: string; focado: boolean }) {
  * que desmonta e remonta o ecrã em vez de o actualizar.
  */
 const placeholders = {
-  Scan: () => (
-    <EmConstrucao
-      titulo="VinhaVibe"
-      subtitulo="Cave Privada · Lisboa"
-      emoji="📷"
-      passo="Passo 6 — Scan + Gemini Vision"
-    />
-  ),
   Sommelier: () => (
     <EmConstrucao
       titulo="Sommelier"
@@ -56,7 +49,7 @@ const placeholders = {
     />
   ),
 } as const satisfies Record<
-  Exclude<keyof MainTabParamList, 'Cave' | 'Futebol' | 'Social' | 'Perfil'>,
+  Exclude<keyof MainTabParamList, 'Scan' | 'Cave' | 'Futebol' | 'Social' | 'Perfil'>,
   React.ComponentType
 >;
 
@@ -104,7 +97,21 @@ export function MainTabs() {
       }}
     >
       {ORDEM.map((nome) =>
-        nome === 'Cave' ? (
+        nome === 'Scan' ? (
+          <Tabs.Screen
+            key={nome}
+            name="Scan"
+            options={{ tabBarIcon: ({ focused }) => <Icone simbolo={icones.Scan} focado={focused} /> }}
+          >
+            {() => (
+              <ScanScreen
+                onAbrirVinho={setVinhoAberto}
+                onEntradaManual={() => setAAdicionar(true)}
+                onAbrirPortfolio={() => setPortfolioAberto(true)}
+              />
+            )}
+          </Tabs.Screen>
+        ) : nome === 'Cave' ? (
           <Tabs.Screen
             key={nome}
             name="Cave"
