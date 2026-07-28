@@ -9,7 +9,11 @@
  * Segredo:   npx supabase secrets set GEMINI_API_KEY=AIza...
  */
 
-const MODELO = 'gemini-2.0-flash';
+// gemini-2.5-flash e não 2.0: numa chave gratuita nova, o 2.0-flash devolve
+// 429 (quota esgotada) logo à primeira chamada, enquanto o 2.5-flash responde
+// 200 na mesma chave. Verificado empiricamente — o modelo do plano gratuito
+// não é o que a documentação sugere por omissão.
+const MODELO = 'gemini-2.5-flash';
 const URL_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 /**
