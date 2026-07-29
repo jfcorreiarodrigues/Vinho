@@ -25,9 +25,15 @@ interface Props {
   onAbrirVinho: (wine: Wine) => void;
   onEntradaManual: () => void;
   onAbrirPortfolio: () => void;
+  onAbrirLote: (tipo: 'fatura' | 'prateleira') => void;
 }
 
-export function ScanScreen({ onAbrirVinho, onEntradaManual, onAbrirPortfolio }: Props) {
+export function ScanScreen({
+  onAbrirVinho,
+  onEntradaManual,
+  onAbrirPortfolio,
+  onAbrirLote,
+}: Props) {
   const user = useStore((s) => s.user);
   const wines = useStore((s) => s.wines);
   const addWine = useStore((s) => s.addWine);
@@ -102,8 +108,8 @@ export function ScanScreen({ onAbrirVinho, onEntradaManual, onAbrirPortfolio }: 
         <View style={estilos.grelha}>
           <Accao emoji="✍️" titulo="Manual" desc="Entrada à mão" onPress={onEntradaManual} />
           <Accao emoji="📊" titulo="Portfolio" desc="ROI da cave" onPress={onAbrirPortfolio} />
-          <Accao emoji="🧾" titulo="Fatura" desc="Em breve" desactivado />
-          <Accao emoji="🗄️" titulo="Prateleira" desc="Em breve" desactivado />
+          <Accao emoji="🧾" titulo="Fatura" desc="Vários de uma vez" onPress={() => onAbrirLote('fatura')} />
+          <Accao emoji="🗄️" titulo="Prateleira" desc="Digitaliza a cave" onPress={() => onAbrirLote('prateleira')} />
         </View>
 
         {recentes.length > 0 ? (

@@ -31,7 +31,7 @@ npm start
 
 ```bash
 npm run typecheck                    # tsc em modo strict
-npm test                             # lógica pura da app (78 testes)
+npm test                             # lógica pura da app (104 testes)
 ./supabase/tests/run.sh              # migrações + RLS contra Postgres local (12 testes)
 npx expo export --platform android   # confirma que a app faz bundle
 ```
@@ -74,6 +74,26 @@ python3 scripts/gerar-assets.py
 São assets de trabalho, suficientes para `eas build`. Substituir por arte
 definitiva antes de submeter às lojas.
 
+## Edge Functions
+
+Três funções, todas a usar `GEMINI_API_KEY` como secret do servidor:
+
+| Função | Usada por |
+|---|---|
+| `gemini-scan` | Scan de etiqueta |
+| `gemini-sommelier` | Chat contextual |
+| `gemini-bulk` | Fatura e prateleira |
+
+```bash
+npx supabase functions deploy gemini-scan
+npx supabase functions deploy gemini-sommelier
+npx supabase functions deploy gemini-bulk
+npx supabase secrets set GEMINI_API_KEY=AIza...
+```
+
+Sem isto, os ecrãs mostram erro e oferecem a entrada manual — degradam, não
+rebentam.
+
 ## Desvios conscientes à especificação
 
 | Spec | Implementado | Porquê |
@@ -98,10 +118,10 @@ Seguindo a ordem da secção 16 da especificação:
 - [x] **5. Auth flow** — Onboarding, Auth, navegação por separadores
 - [x] **6. Scan core** — `ScanScreen`, `gemini.ts` (I/O), `scan.ts` (puro, testado)
 - [x] **7. Cave** — `CaveScreen`, `WineDetailScreen`, entrada manual
-- [ ] 8. Sommelier — **bloqueado: falta a chave do Gemini**
+- [x] **8. Sommelier** — `SommelierScreen`, `sommelier.ts` (puro, testado)
 - [x] **9. Futebol** — `FootballScreen`, maridagens, wine bars de Lisboa
 - [x] **10. Social** — `SocialScreen` (feed, descobrir, desafios)
-- [ ] 11. Bulk entry — **bloqueado: falta a chave do Gemini**
+- [x] **11. Bulk entry** — `BulkEntryScreen` (fatura e prateleira), `bulk.ts`
 - [x] **12. Investment** — `InvestmentScreen`, `investimento.ts`, `winePrices.ts`
 - [~] **13. Profile** — `ProfileScreen` feito; Stripe pendente de chaves
 - [x] **14. Notificações** — `alertas.ts` (puro, testado) + `notifications.ts`

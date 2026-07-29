@@ -3,12 +3,13 @@ import { useState } from 'react';
 import { Modal, StyleSheet, Text } from 'react-native';
 
 import { CaveScreen } from '@/screens/CaveScreen';
-import { EmConstrucao } from '@/screens/EmConstrucao';
 import { EntradaManualScreen } from '@/screens/EntradaManualScreen';
 import { FootballScreen } from '@/screens/FootballScreen';
 import { InvestmentScreen } from '@/screens/InvestmentScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
+import { BulkEntryScreen } from '@/screens/BulkEntryScreen';
 import { ScanScreen } from '@/screens/ScanScreen';
+import { SommelierScreen } from '@/screens/SommelierScreen';
 import { SocialScreen } from '@/screens/SocialScreen';
 import { WineDetailScreen } from '@/screens/WineDetailScreen';
 import { Colors, Typography } from '@/theme';
@@ -34,27 +35,9 @@ function Icone({ simbolo, focado }: { simbolo: string; focado: boolean }) {
   );
 }
 
-/**
- * Placeholders declarados ao nível do módulo. Como componentes inline no
- * `<Tabs.Screen>` seriam uma identidade nova a cada render do navigator, o
- * que desmonta e remonta o ecrã em vez de o actualizar.
- */
-const placeholders = {
-  Sommelier: () => (
-    <EmConstrucao
-      titulo="Sommelier"
-      subtitulo="de Alvalade"
-      emoji="🧑‍🍳"
-      passo="Passo 8 — Chat contextual"
-    />
-  ),
-} as const satisfies Record<
-  Exclude<keyof MainTabParamList, 'Scan' | 'Cave' | 'Futebol' | 'Social' | 'Perfil'>,
-  React.ComponentType
->;
-
 /** Separadores já implementados, que não passam pelos placeholders. */
 const ECRAS: Partial<Record<keyof MainTabParamList, React.ComponentType>> = {
+  Sommelier: SommelierScreen,
   Futebol: FootballScreen,
   Social: SocialScreen,
 };
@@ -84,6 +67,7 @@ export function MainTabs() {
   const [vinhoAberto, setVinhoAberto] = useState<Wine | null>(null);
   const [aAdicionar, setAAdicionar] = useState(false);
   const [portfolioAberto, setPortfolioAberto] = useState(false);
+  const [lote, setLote] = useState<'fatura' | 'prateleira' | null>(null);
 
   return (
     <>
@@ -108,6 +92,7 @@ export function MainTabs() {
                 onAbrirVinho={setVinhoAberto}
                 onEntradaManual={() => setAAdicionar(true)}
                 onAbrirPortfolio={() => setPortfolioAberto(true)}
+                onAbrirLote={setLote}
               />
             )}
           </Tabs.Screen>
@@ -138,7 +123,7 @@ export function MainTabs() {
           <Tabs.Screen
             key={nome}
             name={nome}
-            component={ECRAS[nome] ?? placeholders[nome as keyof typeof placeholders]}
+            component={ECRAS[nome]!}
             options={{
               tabBarIcon: ({ focused }) => (
                 <Icone simbolo={icones[nome]} focado={focused} />
@@ -158,6 +143,15 @@ export function MainTabs() {
       {vinhoAberto ? (
         <WineDetailScreen wine={vinhoAberto} onFechar={() => setVinhoAberto(null)} />
       ) : null}
+    </Modal>
+
+    <Modal
+      visible={lote !== null}
+      animationType="slide"
+      onRequestClose={() => setLote(null)}
+      presentationStyle="pageSheet"
+    >
+      {lote ? <BulkEntryScreen tipo={lote} onFechar={() => setLote(null)} /> : null}
     </Modal>
 
     <Modal
