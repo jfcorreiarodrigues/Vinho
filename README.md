@@ -9,7 +9,7 @@ português — *"Vivino para quem leva vinho a sério em Portugal"*.
 - **Linguagem:** TypeScript strict
 - **Base de dados:** Supabase (PostgreSQL + Auth + RLS + Storage + Realtime)
 - **Estado global:** Zustand
-- **Navegação:** React Navigation v6 (Bottom Tabs + Stack)
+- **Navegação:** React Navigation v7 (Bottom Tabs + Modals)
 - **Pagamentos:** Stripe React Native
 - **Build/Deploy:** EAS (Expo Application Services)
 
@@ -85,10 +85,16 @@ Três funções, todas a usar `GEMINI_API_KEY` como secret do servidor:
 | `gemini-bulk` | Fatura e prateleira |
 
 ```bash
-npx supabase functions deploy gemini-scan
-npx supabase functions deploy gemini-sommelier
-npx supabase functions deploy gemini-bulk
-npx supabase secrets set GEMINI_API_KEY=AIza...
+./scripts/publicar-supabase.sh
+```
+
+Publica as três e pede a chave. Manualmente seria:
+
+```bash
+npx supabase functions deploy gemini-scan --project-ref <ref>
+npx supabase functions deploy gemini-sommelier --project-ref <ref>
+npx supabase functions deploy gemini-bulk --project-ref <ref>
+npx supabase secrets set GEMINI_API_KEY=AIza... --project-ref <ref>
 ```
 
 Sem isto, os ecrãs mostram erro e oferecem a entrada manual — degradam, não
@@ -126,3 +132,22 @@ Seguindo a ordem da secção 16 da especificação:
 - [~] **13. Profile** — `ProfileScreen` feito; Stripe pendente de chaves
 - [x] **14. Notificações** — `alertas.ts` (puro, testado) + `notifications.ts`
 - [~] 15. Polimento — feito ao longo do caminho; falta rever em dispositivo
+
+## O que só pode ser feito fora deste repositório
+
+O código está completo e verificado, mas há passos que exigem credenciais,
+um telemóvel ou acesso de rede que o ambiente de desenvolvimento não tem.
+
+| # | Passo | Porque não foi feito aqui | Bloqueia |
+|---|---|---|---|
+| 1 | Revogar a chave Gemini de teste em [ai.google.dev](https://ai.google.dev) | Foi partilhada em texto simples num chat | Segurança |
+| 2 | `./scripts/publicar-supabase.sh` | A rede do agente bloqueia `api.supabase.com` | Scan, Sommelier, Fatura, Prateleira |
+| 3 | `npm start` + Expo Go num telemóvel | Não há dispositivo no ambiente | Câmara, hápticos, gestos, push |
+| 4 | ~30 fotos de etiquetas + `npx tsx scripts/testar-gemini.ts` | As fotos têm de ser reais | Decide se o scan pode ser o fluxo principal |
+| 5 | Chaves Stripe | Não existem | Passo 13 (premium) |
+| 6 | Arte definitiva de ícone e splash | Os actuais são gerados por script | Submissão às lojas |
+
+O passo 4 é o que mais informa o produto: se a precisão em produtores
+pequenos ficar abaixo de 60%, o scan não aguenta ser a porta de entrada e a
+entrada manual tem de subir de estatuto. Os limiares estão em
+`scripts/testar-gemini.ts`.
