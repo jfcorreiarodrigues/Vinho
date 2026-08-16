@@ -17,9 +17,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { scheduleMaturationAlerts, scheduleWeeklyDigest } from '@/lib/notifications';
-import { supabase } from '@/lib/supabase';
+import { configuracaoEmFalta, supabase } from '@/lib/supabase';
 import { MainTabs } from '@/navigation';
 import { AuthScreen } from '@/screens/AuthScreen';
+import { ConfiguracaoEmFaltaScreen } from '@/screens/ConfiguracaoEmFaltaScreen';
 import { OnboardingScreen } from '@/screens/OnboardingScreen';
 import { useStore } from '@/store';
 import { Colors } from '@/theme';
@@ -52,6 +53,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Sem configuração o cliente aponta para um URL inexistente; pedir sessão
+    // só produzia um erro de rede antes do ecrã que explica o problema.
+    if (configuracaoEmFalta) return;
+
     void carregarSessao().finally(() => setSessaoVerificada(true));
 
     const { data } = supabase.auth.onAuthStateChange((evento) => {
@@ -89,7 +94,9 @@ export default function App() {
     <GestureHandlerRootView style={estilos.raiz}>
       <SafeAreaProvider>
         <StatusBar style="light" />
-        {aArrancar ? (
+        {configuracaoEmFalta ? (
+          <ConfiguracaoEmFaltaScreen />
+        ) : aArrancar ? (
           <View style={estilos.arranque}>
             <ActivityIndicator color={Colors.gold.primary} size="large" />
           </View>

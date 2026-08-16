@@ -13,22 +13,28 @@ import type { Result, User, Wine, WineInput, WinePost } from '@/types';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error(
-    'Faltam EXPO_PUBLIC_SUPABASE_URL e/ou EXPO_PUBLIC_SUPABASE_ANON_KEY. ' +
-      'Copia .env.example para .env e preenche os valores.',
-  );
-}
+/**
+ * Um `throw` aqui rebentaria durante o import, antes de haver React a
+ * renderizar seja o que for — e o resultado é um ecrã branco sem explicação
+ * nenhuma. Foi assim que a primeira publicação no Vercel falhou. Em vez
+ * disso sinalizamos, e a `App` mostra um ecrã que diz exactamente o que
+ * falta configurar.
+ */
+export const configuracaoEmFalta = !SUPABASE_URL || !SUPABASE_ANON_KEY;
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    // Não há callback de OAuth por URL em React Native.
-    detectSessionInUrl: false,
+export const supabase = createClient<Database>(
+  SUPABASE_URL ?? 'https://sem-configuracao.supabase.co',
+  SUPABASE_ANON_KEY ?? 'sem-chave',
+  {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      // Não há callback de OAuth por URL em React Native.
+      detectSessionInUrl: false,
+    },
   },
-});
+);
 
 // O refresh automático só deve correr com a app em primeiro plano; caso
 // contrário o timer fica a disparar em background e falha sem rede.

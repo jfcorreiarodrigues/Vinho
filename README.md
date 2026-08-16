@@ -63,6 +63,29 @@ segurança) e para as instruções de aplicação.
 Os testes cobrem o item do checklist da secção 17 ("utilizador A não vê a cave
 do utilizador B") e mais dez invariantes de segurança.
 
+## Web (Vercel)
+
+A app corre no browser via `react-native-web`. O `vercel.json` já traz o
+build configurado — o que falta é do lado do Vercel:
+
+1. **Settings → Environment Variables**, para *Production* e *Preview*:
+   - `EXPO_PUBLIC_SUPABASE_URL`
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+2. **Deployments → Redeploy**
+
+As variáveis são resolvidas em *build time*, não em runtime: defini-las sem
+voltar a construir não muda nada. Se faltarem, a app mostra um ecrã a dizer
+exactamente isso em vez de um ecrã branco.
+
+```bash
+npm run build:web   # gera dist/, igual ao que o Vercel corre
+npx serve -s dist   # confirmar localmente antes de publicar
+```
+
+A web é para **demonstrar**, não é o produto: a câmara depende do browser, e
+as notificações push não existem lá (estão guardadas por
+`Platform.OS !== 'web'`). O alvo continua a ser iOS e Android.
+
 ## Assets
 
 Os ícones e o splash são gerados a partir da paleta do design system:
