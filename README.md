@@ -65,22 +65,26 @@ do utilizador B") e mais dez invariantes de segurança.
 
 ## Web (Vercel)
 
-A app corre no browser via `react-native-web`. O `vercel.json` já traz o
-build configurado — o que falta é do lado do Vercel:
-
-1. **Settings → Environment Variables**, para *Production* e *Preview*:
-   - `EXPO_PUBLIC_SUPABASE_URL`
-   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-2. **Deployments → Redeploy**
-
-As variáveis são resolvidas em *build time*, não em runtime: defini-las sem
-voltar a construir não muda nada. Se faltarem, a app mostra um ecrã a dizer
-exactamente isso em vez de um ecrã branco.
+A app corre no browser via `react-native-web`. O `vercel.json` traz o build
+configurado e o `.env.production` traz a configuração pública do Supabase,
+por isso **não é preciso definir nada no painel do Vercel** — cada push
+reconstrói e publica.
 
 ```bash
 npm run build:web   # gera dist/, igual ao que o Vercel corre
 npx serve -s dist   # confirmar localmente antes de publicar
 ```
+
+Se algum dia se quiser tirar as chaves do repositório, basta apagar o
+`.env.production` e definir `EXPO_PUBLIC_SUPABASE_URL` e
+`EXPO_PUBLIC_SUPABASE_ANON_KEY` em Settings → Environment Variables. São
+resolvidas em *build time*: defini-las sem voltar a construir não muda nada.
+Se faltarem, a app mostra um ecrã a dizer exactamente o que falta em vez de
+um ecrã branco.
+
+O `--clear` no `build:web` não é decorativo: o Metro guarda em cache o
+resultado da inlining das `EXPO_PUBLIC_*`, e sem ele um build pode sair com
+os valores da configuração anterior — falha silenciosa e difícil de ver.
 
 A web é para **demonstrar**, não é o produto: a câmara depende do browser, e
 as notificações push não existem lá (estão guardadas por
