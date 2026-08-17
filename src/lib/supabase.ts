@@ -3,6 +3,7 @@ import { createClient, type PostgrestError } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 import 'react-native-url-polyfill/auto';
 
+import { type EstadoRede, traduzErro as traduzErroPuro } from '@/lib/erros';
 import type { Database, WineRow } from '@/types/database';
 import type { Result, User, Wine, WineInput, WinePost } from '@/types';
 
@@ -51,41 +52,24 @@ AppState.addEventListener('change', (state) => {
  * ------------------------------------------------------------------ */
 
 /**
+ * Só o browser sabe afirmar isto. Em React Native não há equivalente sem
+ * dependência extra, e inventar uma certeza é pior do que admitir que não se
+ * sabe — ver `EstadoRede` em `erros.ts`.
+ */
+function estadoDaRede(): EstadoRede {
+  if (typeof navigator === 'undefined' || typeof navigator.onLine !== 'boolean') {
+    return 'desconhecido';
+  }
+  return navigator.onLine ? 'online' : 'offline';
+}
+
+/**
  * O Supabase devolve mensagens em inglês. A secção 15 exige PT-PT em tudo o
  * que chega ao utilizador, por isso traduzimos os casos conhecidos e damos
- * uma mensagem genérica ao resto.
+ * uma mensagem genérica ao resto. A lógica é pura e vive em `erros.ts`.
  */
 export function traduzErro(error: PostgrestError | Error | null): string {
-  if (!error) return 'Ocorreu um erro inesperado.';
-
-  const msg = error.message ?? '';
-
-  if (msg.includes('LIMITE_PLANO_FREE')) {
-    return 'O plano gratuito permite até 50 garrafas na cave. Faz upgrade para Premium para adicionares mais.';
-  }
-  if (msg.includes('Invalid login credentials')) {
-    return 'Email ou palavra-passe incorrectos.';
-  }
-  if (msg.includes('User already registered')) {
-    return 'Já existe uma conta com este email.';
-  }
-  if (msg.includes('Password should be at least')) {
-    return 'A palavra-passe tem de ter pelo menos 6 caracteres.';
-  }
-  if (msg.includes('Email not confirmed')) {
-    return 'Confirma o teu email antes de entrares.';
-  }
-  if (msg.includes('Unable to validate email address')) {
-    return 'O endereço de email não é válido.';
-  }
-  if (msg.includes('duplicate key')) {
-    return 'Este registo já existe.';
-  }
-  if (msg.includes('Failed to fetch') || msg.includes('Network request failed')) {
-    return 'Sem ligação à internet. Verifica a rede e tenta outra vez.';
-  }
-
-  return 'Não foi possível completar a operação. Tenta novamente.';
+  return traduzErroPuro(error, estadoDaRede());
 }
 
 function falha<T>(error: PostgrestError | Error | null): Result<T> {
